@@ -1,6 +1,5 @@
 package com.example.taskly.ui.presentation.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -38,25 +37,17 @@ import com.example.taskly.components.ExistingAccount
 import com.example.taskly.data.authantication.Resource
 import com.example.taskly.ui.navigation.Routes
 import com.example.taskly.ui.viewmodel.AuthViewModel
-import com.example.taskly.ui.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpScreen(authViewModel: AuthViewModel = hiltViewModel(),
-                 userViewModel: UserViewModel = hiltViewModel(),
-                 navHostController: NavHostController) {
-    val signupFlow = authViewModel.signupFlow.collectAsState()
-    val userFlow = userViewModel.user.collectAsState()
-    var name by remember { mutableStateOf("") }
+fun LogInScreen(
+    viewModel: AuthViewModel = hiltViewModel(),
+    navHostController: NavHostController
+) {
+    val loginFlow = viewModel.loginFlow.collectAsState()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
-
-    val onNameChange = {newName: String ->
-        name = newName
-    }
 
     val onEmailChange = {newEmail: String ->
         email = newEmail
@@ -67,7 +58,7 @@ fun SignUpScreen(authViewModel: AuthViewModel = hiltViewModel(),
 
     Scaffold(
         topBar = {
-            TopAppBar(title = {Text("TaskLy")})
+            TopAppBar(title = { Text("TaskLy") })
         }
     ) { innerPadding ->
         Column(
@@ -76,14 +67,6 @@ fun SignUpScreen(authViewModel: AuthViewModel = hiltViewModel(),
                 .padding(innerPadding)
                 .padding(top = 50.dp, start = 40.dp, end = 40.dp)
         ) {
-            CustomTextField(
-                textState = name,
-                title = "name"
-            ) {
-                onNameChange(it)
-            }
-
-            Spacer(Modifier.height(10.dp))
             CustomTextField(
                 textState = email,
                 title = "email"
@@ -101,7 +84,8 @@ fun SignUpScreen(authViewModel: AuthViewModel = hiltViewModel(),
                     PasswordVisualTransformation()
                 },
                 trailingIcon = {
-                    val icon = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                    val icon =
+                        if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                     IconButton(
                         onClick = {
                             isPasswordVisible = !isPasswordVisible
@@ -120,19 +104,18 @@ fun SignUpScreen(authViewModel: AuthViewModel = hiltViewModel(),
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 CustomButton(
-                    "Sign up"
+                    "Login"
                 ) {
-                    authViewModel.signup(
-                        name = name,
+                    viewModel.login(
                         email = email,
                         password = password
                     )
                 }
             }
 
-            Spacer(Modifier.height(15.dp))
-            signupFlow.value?.let {
+            loginFlow.value?.let {
                 when(it) {
                     is Resource.Failure -> {
                         Column(
@@ -143,61 +126,37 @@ fun SignUpScreen(authViewModel: AuthViewModel = hiltViewModel(),
                                 color = MaterialTheme.colorScheme.error,
                                 textAlign = TextAlign.Center)
                         }
+
                     }
                     Resource.Loading -> {
-                        Text(
-                            text = "Please wait!",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Text("logging in")
                     }
                     is Resource.Success -> {
                         LaunchedEffect(Unit) {
-                            userViewModel.saveUserProfile(name = name)
                             navHostController.navigate(Routes.Home) {
-                                popUpTo(Routes.SignUp) {inclusive = true}
+                                popUpTo(Routes.LogIn) {inclusive = true}
                             }
                         }
                     }
                 }
             }
 
-            userFlow.value?.let {
-                when (it) {
-                    is Resource.Failure -> {
-                        Toast.makeText(context, "${it.error}", Toast.LENGTH_LONG).show()
-                    }
-                    Resource.Loading -> {
-                        Text("Loading")
-                    }
-                    is Resource.Success<*> -> {
-                        Toast.makeText(context, "${it.result}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-
+            Spacer(Modifier.height(15.dp))
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 ExistingAccount(
-                    title = "Already have an account??",
-                    buttonTitle = "Log in"
+                    title = "New to TaskLy?",
+                    buttonTitle = "Create an account"
                 ) {
-                    navHostController.navigate(Routes.LogIn)
+                    navHostController.navigate(Routes.SignUp)
                 }
             }
+
         }
     }
 }
-
-
-
-
-
-
-
-
 
 
 

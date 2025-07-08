@@ -6,18 +6,23 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.taskly.ui.presentation.screens.HomeScreen
+import com.example.taskly.ui.presentation.screens.LogInScreen
 import com.example.taskly.ui.presentation.screens.SignUpScreen
 
 @Composable
 fun NavApp() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Routes.SignUp) {
+    NavHost(navController = navController, startDestination = Routes.LogIn) {
         composable<Routes.SignUp> {
             SignUpScreen(navHostController = navController)
         }
 
+        composable<Routes.LogIn> {
+            LogInScreen(navHostController = navController)
+        }
+
         composable<Routes.Home> {
-            HomeScreen()
+            HomeScreen(navHostController = navController)
         }
     }
 }
