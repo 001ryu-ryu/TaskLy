@@ -68,8 +68,7 @@ fun AddTaskScreen(
             CustomTextField(
                 textState = taskTitle,
                 title = "Add task",
-                visualTransformation = VisualTransformation.None,
-                trailingIcon = {}
+                visualTransformation = VisualTransformation.None
             ) {
                 taskTitle = it
             }
@@ -77,8 +76,7 @@ fun AddTaskScreen(
             CustomTextField(
                 textState = taskDescription,
                 title = "about this task",
-                visualTransformation = VisualTransformation.None,
-                trailingIcon = {}
+                visualTransformation = VisualTransformation.None
             ) {
                 taskDescription = it
             }

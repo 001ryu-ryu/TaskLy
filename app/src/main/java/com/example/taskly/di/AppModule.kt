@@ -1,8 +1,10 @@
 package com.example.taskly.di
 
 import com.example.taskly.data.repository.AuthRepositoryImpl
+import com.example.taskly.data.repository.TaskRepositoryImpl
 import com.example.taskly.data.repository.UserRepositoryImpl
 import com.example.taskly.domain.repository.AuthRepository
+import com.example.taskly.domain.repository.TaskRepository
 import com.example.taskly.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -32,4 +34,7 @@ object AppModule {
 
     @Provides
     fun provideUserRepository(impl: UserRepositoryImpl): UserRepository = impl
+
+    @Provides
+    fun provideTaskRepository(impl: TaskRepositoryImpl): TaskRepository = impl
 }

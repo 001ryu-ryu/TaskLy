@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.taskly.ui.presentation.screens.AddTaskScreen
 import com.example.taskly.ui.presentation.screens.HomeScreen
 import com.example.taskly.ui.presentation.screens.LogInScreen
 import com.example.taskly.ui.presentation.screens.SignUpScreen
@@ -24,5 +25,29 @@ fun NavApp() {
         composable<Routes.Home> {
             HomeScreen(navHostController = navController)
         }
+
+        composable<Routes.AddTask>() {
+            AddTaskScreen(navHostController = navController)
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

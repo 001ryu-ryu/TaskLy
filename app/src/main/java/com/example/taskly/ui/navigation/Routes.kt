@@ -9,4 +9,7 @@ sealed class Routes {
     object SignUp: Routes()
     @Serializable
     object LogIn: Routes()
+
+    @Serializable
+    object AddTask: Routes()
 }

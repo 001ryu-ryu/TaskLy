@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Password
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,12 +29,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.taskly.R
 import com.example.taskly.components.CustomButton
 import com.example.taskly.components.CustomTextField
 import com.example.taskly.components.ExistingAccount
@@ -56,6 +67,19 @@ fun LogInScreen(
         password = newPassword
     }
 
+    var emailError by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf("") }
+
+    // animation
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.login_animation))
+
+    val progress by animateLottieCompositionAsState(
+        isPlaying = true,
+        composition = composition,
+        iterations = LottieConstants.IterateForever,
+        speed = 0.7f
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("TaskLy") })
@@ -67,9 +91,23 @@ fun LogInScreen(
                 .padding(innerPadding)
                 .padding(top = 50.dp, start = 40.dp, end = 40.dp)
         ) {
+            LottieAnimation(
+                modifier = Modifier
+                    .size(200.dp)
+                    .align(Alignment.CenterHorizontally),
+                composition = composition,
+                progress = {progress}
+            )
             CustomTextField(
                 textState = email,
-                title = "email"
+                title = emailError.ifBlank { "Email" },
+                color = if (emailError.isNotEmpty()) Color.Red else Color.Unspecified,
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Email,
+                        contentDescription = null
+                    )
+                }
             ) {
                 onEmailChange(it)
             }
@@ -77,11 +115,18 @@ fun LogInScreen(
             Spacer(Modifier.height(10.dp))
             CustomTextField(
                 textState = password,
-                title = "password",
+                title = passwordError.ifBlank { "password" },
+                color = if (passwordError.isNotEmpty()) Color.Red else Color.Unspecified,
                 visualTransformation = if (isPasswordVisible) {
                     VisualTransformation.None
                 } else {
                     PasswordVisualTransformation()
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Password,
+                        contentDescription = null
+                    )
                 },
                 trailingIcon = {
                     val icon =
@@ -106,12 +151,18 @@ fun LogInScreen(
             ) {
 
                 CustomButton(
-                    "Login"
+                    title = "Login",
                 ) {
-                    viewModel.login(
-                        email = email,
-                        password = password
-                    )
+                    emailError = if (email.isBlank()) "Email is required" else ""
+                    passwordError = if (email.isBlank()) "Password is required" else ""
+
+                    if (emailError.isEmpty() && passwordError.isEmpty()) {
+                        viewModel.login(
+                            email = email,
+                            password = password
+                        )
+                    }
+
                 }
             }
 
