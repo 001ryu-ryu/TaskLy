@@ -1,5 +1,7 @@
 package com.example.taskly.data.model
 
+import kotlinx.serialization.Serializable
+
 data class Task(
     val id: String = "",
     val title: String = "",

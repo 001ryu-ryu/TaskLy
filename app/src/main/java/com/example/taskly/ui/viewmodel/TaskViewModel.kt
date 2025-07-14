@@ -20,6 +20,11 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
     private val _tasks = MutableStateFlow<Resource<List<Task>>?>(null)
     val tasks = _tasks.asStateFlow()
 
+
+    init {
+        getAllTasks()
+    }
+
     fun addTask(task: Task) {
         val uid = taskRepository.getCurrentUserId()
         if (uid == null) {
@@ -35,8 +40,22 @@ class TaskViewModel @Inject constructor(private val taskRepository: TaskReposito
 
     fun getAllTasks() {
         viewModelScope.launch(Dispatchers.IO) {
-            _tasks.value = Resource.Loading
-            _tasks.value = taskRepository.getAllTasks()
+            taskRepository.getAllTasks().collect {
+                _tasks.value = it
+            }
+        }
+    }
+
+    fun editTask(task: Task) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _addTaskState.value = Resource.Loading
+            _addTaskState.value = taskRepository.editTask(task)
+        }
+    }
+
+    fun removeTask(task: Task) {
+        viewModelScope.launch(Dispatchers.IO) {
+            taskRepository.deleteTask(task)
         }
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.VisualTransformation
@@ -64,6 +65,7 @@ fun AddTaskScreen(
                 .fillMaxWidth()
                 .padding(innerPadding)
                 .padding(top = 50.dp, start = 40.dp, end = 40.dp)
+
         ) {
             CustomTextField(
                 textState = taskTitle,
