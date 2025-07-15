@@ -43,12 +43,3 @@ fun ExistingAccount(
     }
 
 }
-
-@Preview
-@Composable
-private fun Exist() {
-    ExistingAccount(
-        title = "Already have an account?",
-        buttonTitle = "Log in"
-    ) { }
-}

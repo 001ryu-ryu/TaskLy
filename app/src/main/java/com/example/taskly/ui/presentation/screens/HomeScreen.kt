@@ -1,6 +1,7 @@
 package com.example.taskly.ui.presentation.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,23 +16,22 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.taskly.components.CustomCircularLoader
+import com.example.taskly.components.CustomLinearLoader
 import com.example.taskly.data.authantication.Resource
 import com.example.taskly.ui.navigation.Routes
+import com.example.taskly.ui.navigation.Routes.*
 import com.example.taskly.ui.viewmodel.AuthViewModel
 import com.example.taskly.ui.viewmodel.TaskViewModel
 
@@ -40,11 +40,11 @@ import com.example.taskly.ui.viewmodel.TaskViewModel
 fun HomeScreen(authViewModel: AuthViewModel = hiltViewModel(),
                taskViewModel: TaskViewModel = hiltViewModel(),
                navHostController: NavHostController) {
-    val taskList = taskViewModel.tasks.collectAsState()
+    val taskState = taskViewModel.tasks.collectAsState()
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {Text("Welcome ${authViewModel.currentUser?.displayName}")}
+                title = {Text("Hi ${authViewModel.currentUser?.displayName}, your Tasks")}
             )
 
         },
@@ -61,11 +61,21 @@ fun HomeScreen(authViewModel: AuthViewModel = hiltViewModel(),
             }
         }
     ) { innerPadding ->
-        taskList.value?.let {
-            when(it) {
+        if (taskState.value == null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                CustomCircularLoader(
+                    Modifier.padding(innerPadding)
+                )
+            }
+        } else {
+            when (val state = taskState.value) {
                 is Resource.Success -> {
                     LazyColumn(modifier = Modifier.padding(innerPadding)) {
-                        items(it.result) {task ->
+                        items(state.result) { task ->
                             TaskItem(
                                 taskTitle = task.title,
                                 taskDescription = task.description,
@@ -73,12 +83,14 @@ fun HomeScreen(authViewModel: AuthViewModel = hiltViewModel(),
                                     taskViewModel.removeTask(task)
                                 }
                             ) {
-                                navHostController.navigate(Routes.EditTask(
-                                    id = task.id,
-                                    title = task.title,
-                                    description = task.description,
-                                    timeStamp = task.timeStamp
-                                ))
+                                navHostController.navigate(
+                                    EditTask(
+                                        id = task.id,
+                                        title = task.title,
+                                        description = task.description,
+                                        timeStamp = task.timeStamp
+                                    )
+                                )
                             }
                         }
                     }
@@ -105,15 +117,8 @@ fun HomeScreen(authViewModel: AuthViewModel = hiltViewModel(),
                         Text("Loading...")
                     }
                 }
-            }
-        }.run {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(innerPadding),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Cannot load tasks, please try enabling internet.")
+
+                else -> {}
             }
         }
     }
@@ -121,6 +126,7 @@ fun HomeScreen(authViewModel: AuthViewModel = hiltViewModel(),
 
 @Composable
 fun TaskItem(
+    modifier: Modifier = Modifier,
     taskTitle: String,
     taskDescription: String,
     onDeleteClick: () -> Unit,
@@ -134,10 +140,17 @@ fun TaskItem(
                 onClick = onClick
             )
     ) {
-        Row {
-            Column {
-                Text(taskTitle)
-                Text(taskDescription)
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.padding(5.dp)
+            ) {
+                Text(taskTitle,
+                    style = MaterialTheme.typography.headlineSmall)
+                Text(taskDescription,
+                    style = MaterialTheme.typography.bodyLarge)
             }
             IconButton(
                 onClick = onDeleteClick
@@ -147,9 +160,7 @@ fun TaskItem(
                     contentDescription = null
                 )
             }
-
         }
-
     }
 }
 

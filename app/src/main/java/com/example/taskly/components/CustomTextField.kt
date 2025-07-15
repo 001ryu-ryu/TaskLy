@@ -12,7 +12,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 @Composable
 fun CustomTextField(
     textState: String,
-    title: String,
+    title: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     color: Color = Color.Unspecified,
     leadingIcon: @Composable (() -> Unit)? = null,
@@ -21,7 +21,11 @@ fun CustomTextField(
 ) {
     OutlinedTextField(
         value = textState,
-        label = { Text(title, color = color) },
+        label = {
+            if (title != null) {
+                Text(title, color = color)
+            }
+        },
         onValueChange = {onTextChange(it)},
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.Transparent,

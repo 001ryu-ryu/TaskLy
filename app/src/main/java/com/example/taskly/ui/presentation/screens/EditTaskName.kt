@@ -1,6 +1,9 @@
 package com.example.taskly.ui.presentation.screens
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -14,10 +17,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.taskly.components.CustomButton
+import com.example.taskly.components.CustomLinearLoader
+import com.example.taskly.components.CustomTextField
+import com.example.taskly.components.NavBackIcon
 import com.example.taskly.data.authantication.Resource
 import com.example.taskly.data.model.Task
 import com.example.taskly.ui.viewmodel.TaskViewModel
@@ -46,23 +54,31 @@ fun EditTaskName(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit") }
+                title = { Text("Redefine $title") },
+                navigationIcon = {
+                    NavBackIcon { navHostController.popBackStack() }
+                }
             )
         }
     ) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.fillMaxWidth()
+                .padding(innerPadding)
+                .padding(horizontal = 15.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            TextField(
-                value = nameState,
-                onValueChange = {nameState = it}
-            )
-            TextField(
-                value = descriptionState,
-                onValueChange = {descriptionState = it}
-            )
-
-
+            CustomTextField(
+                textState = nameState
+            ) {
+                nameState = it
+            }
+            Spacer(Modifier.height(8.dp))
+            CustomTextField(
+                textState = descriptionState
+            ) {
+                descriptionState = it
+            }
+            Spacer(Modifier.height(8.dp))
             CustomButton(
                 title = "Save Changes"
             ) {
@@ -80,7 +96,7 @@ fun EditTaskName(
                         Text("Failed to edit task: ${state.error}")
                     }
                     Resource.Loading -> {
-                        Text("Updating task...")
+                        CustomLinearLoader()
                     }
                     is Resource.Success -> {
                         LaunchedEffect(Unit) {

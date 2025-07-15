@@ -29,7 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.taskly.components.CustomButton
+import com.example.taskly.components.CustomLinearLoader
 import com.example.taskly.components.CustomTextField
+import com.example.taskly.components.NavBackIcon
 import com.example.taskly.data.authantication.Resource
 import com.example.taskly.data.model.Task
 import com.example.taskly.ui.viewmodel.TaskViewModel
@@ -46,15 +48,10 @@ fun AddTaskScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Task")},
+                title = { Text("Define Task")},
                 navigationIcon = {
-                    IconButton(
-                        onClick = { navHostController.popBackStack() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = null
-                        )
+                    NavBackIcon {
+                        navHostController.popBackStack()
                     }
                 }
             )
@@ -69,7 +66,7 @@ fun AddTaskScreen(
         ) {
             CustomTextField(
                 textState = taskTitle,
-                title = "Add task",
+                title = "Title",
                 visualTransformation = VisualTransformation.None
             ) {
                 taskTitle = it
@@ -77,23 +74,29 @@ fun AddTaskScreen(
             Spacer(Modifier.height(8.dp))
             CustomTextField(
                 textState = taskDescription,
-                title = "about this task",
+                title = "About this task",
                 visualTransformation = VisualTransformation.None
             ) {
                 taskDescription = it
             }
-
-            CustomButton(
-                title = "Add task"
+            Spacer(Modifier.height(8.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                viewModel.addTask(
-                    Task(
-                        title = taskTitle,
-                        description = taskDescription,
-                        timeStamp = System.currentTimeMillis()
+                CustomButton(
+                    title = "Initialize Task"
+                ) {
+                    viewModel.addTask(
+                        Task(
+                            title = taskTitle,
+                            description = taskDescription,
+                            timeStamp = System.currentTimeMillis()
+                        )
                     )
-                )
+                }
             }
+
 
             taskState.value?.let {
                 when(it) {
@@ -112,7 +115,7 @@ fun AddTaskScreen(
 
                     is Resource.Loading -> {
                         Spacer(Modifier.height(8.dp))
-                        Text("Adding task...")
+                        CustomLinearLoader()
                     }
                 }
             }
