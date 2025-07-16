@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.taskly.ui.presentation.screens.AddTaskScreen
+import com.example.taskly.ui.presentation.screens.CompletedTasksScreen
 import com.example.taskly.ui.presentation.screens.EditTaskName
 import com.example.taskly.ui.presentation.screens.HomeScreen
 import com.example.taskly.ui.presentation.screens.LogInScreen
@@ -41,6 +42,10 @@ fun NavApp() {
                 timeStamp = args.timeStamp,
                 navHostController = navController
             )
+        }
+
+        composable<Routes.CompletedTasks> {
+            CompletedTasksScreen(navHostController = navController)
         }
     }
 }

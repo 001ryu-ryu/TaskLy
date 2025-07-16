@@ -2,6 +2,7 @@ package com.example.taskly.ui.presentation.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddTask
 import androidx.compose.material.icons.filled.Delete
@@ -18,18 +20,31 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.taskly.components.CustomCircularLoader
-import com.example.taskly.components.CustomLinearLoader
+import com.example.taskly.components.TaskCard
 import com.example.taskly.data.authantication.Resource
+import com.example.taskly.data.model.Task
 import com.example.taskly.ui.navigation.Routes
 import com.example.taskly.ui.navigation.Routes.*
 import com.example.taskly.ui.viewmodel.AuthViewModel
@@ -41,6 +56,49 @@ fun HomeScreen(authViewModel: AuthViewModel = hiltViewModel(),
                taskViewModel: TaskViewModel = hiltViewModel(),
                navHostController: NavHostController) {
     val taskState = taskViewModel.tasks.collectAsState()
+
+
+
+    val swipeThreshold = 150f
+    var offsetY by remember { mutableFloatStateOf(0f) }
+
+    val listState = rememberLazyListState()
+
+    val nestedScrollConnection = remember {
+        object: NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // Only care about downward scroll (y > 0) and when at top
+                if (available.y > 0 && listState.firstVisibleItemIndex == 0 &&
+                    listState.firstVisibleItemScrollOffset == 0) {
+                    offsetY += available.y
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                // check if threshold reached
+                if (offsetY > swipeThreshold) {
+
+                    navHostController.navigate(Routes.CompletedTasks) {
+                        launchSingleTop = true // If I’m already on top of the stack, don’t add a new one.
+                        popUpTo(Routes.Home)
+                    }
+                    offsetY = 0f
+                }
+                return Offset.Zero
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                // Reset if fling cancelled
+                offsetY = 0f
+                return Velocity.Zero
+            }
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -61,64 +119,73 @@ fun HomeScreen(authViewModel: AuthViewModel = hiltViewModel(),
             }
         }
     ) { innerPadding ->
-        if (taskState.value == null) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                CustomCircularLoader(
-                    Modifier.padding(innerPadding)
-                )
-            }
-        } else {
-            when (val state = taskState.value) {
-                is Resource.Success -> {
-                    LazyColumn(modifier = Modifier.padding(innerPadding)) {
-                        items(state.result) { task ->
-                            TaskItem(
-                                taskTitle = task.title,
-                                taskDescription = task.description,
-                                onDeleteClick = {
-                                    taskViewModel.removeTask(task)
-                                }
-                            ) {
-                                navHostController.navigate(
-                                    EditTask(
-                                        id = task.id,
-                                        title = task.title,
-                                        description = task.description,
-                                        timeStamp = task.timeStamp
+        Box(
+            modifier = Modifier.fillMaxSize().padding(innerPadding)
+                .nestedScroll(nestedScrollConnection)
+        ) {
+            if (taskState.value == null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    CustomCircularLoader(
+                        Modifier.padding(innerPadding)
+                    )
+                }
+            } else {
+                when (val state = taskState.value) {
+                    is Resource.Success -> {
+                        LazyColumn(state = listState) {
+                            items(items = state.result.filter { !it.isCompleted },
+                                key = {it.id
+                                }) { task ->
+                                TaskItem(
+                                    task = task,
+                                    onSwipeComplete = {
+                                        taskViewModel.editTask(task.copy(isCompleted = true))
+                                    },
+                                    onDeleteClick = {
+                                        taskViewModel.removeTask(task)
+                                    }
+                                ) {
+                                    navHostController.navigate(
+                                        EditTask(
+                                            id = task.id,
+                                            title = task.title,
+                                            description = task.description,
+                                            timeStamp = task.timeStamp
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
-                }
 
-                is Resource.Failure -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(innerPadding),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Cannot load tasks, please try enabling internet.")
+                    is Resource.Failure -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(innerPadding),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Cannot load tasks, please try enabling internet.")
+                        }
                     }
-                }
 
-                is Resource.Loading -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(innerPadding),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Loading...")
+                    is Resource.Loading -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(innerPadding),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Loading...")
+                        }
                     }
-                }
 
-                else -> {}
+                    else -> {}
+                }
             }
         }
     }
@@ -126,42 +193,33 @@ fun HomeScreen(authViewModel: AuthViewModel = hiltViewModel(),
 
 @Composable
 fun TaskItem(
-    modifier: Modifier = Modifier,
-    taskTitle: String,
-    taskDescription: String,
+    task: Task,
+    onSwipeComplete: () -> Unit,
     onDeleteClick: () -> Unit,
     onClick: () -> Unit
 ) {
-    ElevatedCard(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(10.dp)
-            .clickable(
-                onClick = onClick
-            )
-    ) {
-        Row(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(
-                modifier = Modifier.padding(5.dp)
-            ) {
-                Text(taskTitle,
-                    style = MaterialTheme.typography.headlineSmall)
-                Text(taskDescription,
-                    style = MaterialTheme.typography.bodyLarge)
-            }
-            IconButton(
-                onClick = onDeleteClick
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = null
-                )
-            }
+    val dismissState = rememberSwipeToDismissBoxState(
+        positionalThreshold = {totalDistance -> totalDistance * 0.5f},
+        confirmValueChange = {value ->
+            if (value == SwipeToDismissBoxValue.EndToStart || value == SwipeToDismissBoxValue.StartToEnd) {
+                onSwipeComplete()
+                true
+            } else false
         }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+        }
+    ) {
+        TaskCard(
+            task = task,
+            onDeleteClick = onDeleteClick,
+            onClick = onClick
+        )
     }
+
 }
 
 

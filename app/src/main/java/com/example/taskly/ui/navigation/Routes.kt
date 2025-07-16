@@ -14,7 +14,8 @@ sealed class Routes {
 
     @Serializable
     object AddTask: Routes()
-
+    @Serializable
+    object CompletedTasks: Routes()
     @Serializable
     data class EditTask(
         val id: String,
